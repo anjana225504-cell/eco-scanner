@@ -1,37 +1,72 @@
 import streamlit as st
-from openai import OpenAI
-import os
+from sklearn.feature_extraction.text import CountVectorizer
+from sklearn.naive_bayes import MultinomialNB
 
-# Get API key from environment
-client = OpenAI(api_key=os.getenv("OPENAI_API_KEY"))
+# Training data (AI learns from this)
+products = [
+    "plastic bottle",
+    "plastic bag",
+    "glass jar",
+    "glass bottle",
+    "paper cup",
+    "paper bag",
+    "steel bottle",
+    "metal can"
+]
+
+materials = [
+    "Plastic",
+    "Plastic",
+    "Glass",
+    "Glass",
+    "Paper",
+    "Paper",
+    "Metal",
+    "Metal"
+]
+
+# Convert text into numbers for AI
+vectorizer = CountVectorizer()
+X = vectorizer.fit_transform(products)
+
+# Train AI model
+model = MultinomialNB()
+model.fit(X, materials)
 
 st.title("🌱 AI Eco Product Scanner")
 
-st.write("Enter a product name to analyze its environmental impact.")
-
-product = st.text_input("Enter Product Name")
+product = st.text_input("Enter product name")
 
 if st.button("Scan Product"):
 
-    prompt = f"""
-    Analyze the environmental sustainability of this product: {product}
+    if product == "":
+        st.write("Please enter a product")
+    else:
+        test = vectorizer.transform([product])
+        prediction = model.predict(test)[0]
 
-    Provide:
-    - Material
-    - Recyclability
-    - Environmental Impact
-    - Eco-Friendly Suggestion
-    - Eco Score (Low / Medium / High)
+        st.subheader("AI Prediction")
 
-    Keep the response short and clear.
-    """
+        if prediction == "Plastic":
+            st.write("Material:", prediction)
+            st.write("Recyclable: Limited")
+            st.write("Impact: High pollution risk")
+            st.write("Suggestion: Use reusable alternatives")
 
-    response = client.responses.create(
-        model="gpt-4.1-mini",
-        input=prompt
-    )
+        elif prediction == "Glass":
+            st.write("Material:", prediction)
+            st.write("Recyclable: Yes")
+            st.write("Impact: Low environmental harm")
+            st.write("Suggestion: Reuse glass containers")
 
-    result = response.output_text
+        elif prediction == "Paper":
+            st.write("Material:", prediction)
+            st.write("Recyclable: Yes")
+            st.write("Impact: Biodegradable")
+            st.write("Suggestion: Use recycled paper")
 
-    st.subheader("🌍 Sustainability Analysis")
-    st.write(result)
+        elif prediction == "Metal":
+            st.write("Material:", prediction)
+            st.write("Recyclable: Highly recyclable")
+            st.write("Impact: Durable and reusable")
+            st.write("Suggestion: Prefer metal containers")
